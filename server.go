@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -64,6 +65,28 @@ func (server *Server) Handler(conn net.Conn) {
 
 	// Boardcast user login message
 	server.Boardcast(user, "login")
+
+	// Accept users' messages from client
+	go func () {
+		buf := make([]byte, 4096)
+		for {
+			n, err := conn.Read(buf)
+			if n == 0 {
+				server.Boardcast(user, "offline")
+				return
+			}
+
+			if err != nil && err != io.EOF {
+				fmt.Println("Conn Read err:", err)
+				return
+			}
+
+			// Extract user message, remove '\n' in the end
+			msg := string(buf[:n-1])
+
+			server.Boardcast(user, msg)
+		}
+	} ()
 
 	// Current handler block
 	select {
