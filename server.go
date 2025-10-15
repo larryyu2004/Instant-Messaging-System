@@ -56,15 +56,9 @@ func (server *Server) Handler(conn net.Conn) {
 	// Connect with current business
 	// fmt.Println("Connect Successfully")
 
-	user := NewUser(conn)
+	user := NewUser(conn, server)
 
-	// User login, add user into the OnlineMap
-	server.mapLock.Lock()
-	server.OnlineMap[user.Name] = user
-	server.mapLock.Unlock()
-
-	// Boardcast user login message
-	server.Boardcast(user, "login")
+	user.Online()
 
 	// Accept users' messages from client
 	go func () {
@@ -72,7 +66,7 @@ func (server *Server) Handler(conn net.Conn) {
 		for {
 			n, err := conn.Read(buf)
 			if n == 0 {
-				server.Boardcast(user, "offline")
+				user.Offline()
 				return
 			}
 
@@ -84,7 +78,8 @@ func (server *Server) Handler(conn net.Conn) {
 			// Extract user message, remove '\n' in the end
 			msg := string(buf[:n-1])
 
-			server.Boardcast(user, msg)
+			// User handle the message
+			user.ProcessingMessage(msg)
 		}
 	} ()
 
