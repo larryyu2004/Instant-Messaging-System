@@ -13,7 +13,7 @@ type Server struct {
 
 	// Online User List
 	OnlineMap map[string]*User
-	mapLock sync.RWMutex
+	mapLock   sync.RWMutex
 
 	// Message Boardcast Channel
 	Message chan string
@@ -22,10 +22,10 @@ type Server struct {
 // Create a server interface
 func NewServer(ip string, port int) *Server {
 	server := &Server{
-		Ip:   ip,
-		Port: port,
+		Ip:        ip,
+		Port:      port,
 		OnlineMap: make(map[string]*User),
-		Message: make(chan string),
+		Message:   make(chan string),
 	}
 
 	return server
@@ -33,9 +33,9 @@ func NewServer(ip string, port int) *Server {
 
 // Goroutine for listening the boardcast from the message
 // Once get new message, send to all user
-func (server *Server) listenMessager () {
+func (server *Server) listenMessager() {
 	for {
-		msg := <- server.Message
+		msg := <-server.Message
 
 		// Send the message to all the online users
 		server.mapLock.Lock()
@@ -46,7 +46,7 @@ func (server *Server) listenMessager () {
 	}
 }
 
-func (server *Server) Boardcast (user *User, msg string) {
+func (server *Server) Boardcast(user *User, msg string) {
 	sendMsg := "[" + user.Addr + "]" + user.Name + ":" + msg
 
 	server.Message <- sendMsg
@@ -61,7 +61,7 @@ func (server *Server) Handler(conn net.Conn) {
 	user.Online()
 
 	// Accept users' messages from client
-	go func () {
+	go func() {
 		buf := make([]byte, 4096)
 		for {
 			n, err := conn.Read(buf)
@@ -81,12 +81,10 @@ func (server *Server) Handler(conn net.Conn) {
 			// User handle the message
 			user.ProcessingMessage(msg)
 		}
-	} ()
+	}()
 
 	// Current handler block
-	select {
-
-	}
+	select {}
 
 }
 

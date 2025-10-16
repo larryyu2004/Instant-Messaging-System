@@ -21,7 +21,7 @@ func NewUser(conn net.Conn, server *Server) *User {
 		C:    make(chan string),
 		conn: conn,
 
-		server : server,
+		server: server,
 	}
 
 	// Launch the goroutine that listens to the current user channel message
@@ -52,9 +52,25 @@ func (user *User) Offline() {
 	user.server.Boardcast(user, "logout")
 }
 
+// Send message to the client of current user
+func (user *User) SendMsg(msg string) {
+	user.conn.Write([]byte(msg))
+}
+
 // Processing Message for users
 func (user *User) ProcessingMessage(msg string) {
-	user.server.Boardcast(user, msg)
+	if msg == "who" {
+		// Search current online users
+		user.server.mapLock.Lock()
+		for _, userOnline := range user.server.OnlineMap {
+			onlineMsg := "[" + userOnline.Addr + "]" + userOnline.Name + ":" + "Online...\n"
+			user.SendMsg(onlineMsg)
+		}
+		user.server.mapLock.Unlock()
+	} else {
+		user.server.Boardcast(user, msg)
+	}
+
 }
 
 // Listen current user goroutine method
