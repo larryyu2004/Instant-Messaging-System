@@ -97,7 +97,7 @@ func (server *Server) Handler(conn net.Conn) {
 			// No need to do anything, just for activating the select statement, reset the following timer
 
 			// 10 seconds later
-		case <- time.After(time.Second * 10):
+		case <- time.After(time.Second * 60):
 			// Timed Out
 			// Kick current user out
 
